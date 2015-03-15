@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Incubator", "Incubator\Incubator.cppproj", "{11CFA82A-0320-42F2-AD18-EA0EC843EBC7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{11CFA82A-0320-42F2-AD18-EA0EC843EBC7}.Debug|AVR.ActiveCfg = Debug|AVR
+		{11CFA82A-0320-42F2-AD18-EA0EC843EBC7}.Debug|AVR.Build.0 = Debug|AVR
+		{11CFA82A-0320-42F2-AD18-EA0EC843EBC7}.Release|AVR.ActiveCfg = Release|AVR
+		{11CFA82A-0320-42F2-AD18-EA0EC843EBC7}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
