@@ -51,7 +51,7 @@ uint8_t lcd_getc();
 #endif
 
 void lcd_gotoXY(uint8_t lin, uint8_t col);
-void lcd_putc(char c);
+void lcd_putc(unsigned char c);
 void lcd_puts(const char *s);
 void lcd_puts_P(const char *progmem_s);
 #if (LCD_DISPLAYS>1)

@@ -524,7 +524,7 @@ Display character
 Input:    character to be displayed
 Returns:  none
 *************************************************************************/
-void lcd_putc(char c)
+void lcd_putc(unsigned char c)
   {
     lcd_write(c,1);
   }

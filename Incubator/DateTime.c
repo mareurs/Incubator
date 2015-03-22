@@ -44,7 +44,7 @@ ISR(TIMER1_COMPA_vect)
 		startBuzz();
 	else
 		stopBuzz();
-		
+	
 	printToLCD();
 }
 

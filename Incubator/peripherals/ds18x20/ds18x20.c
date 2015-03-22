@@ -13,6 +13,7 @@
 #include "rprintf.h"
 #include <stddef.h>
 #include "crc8.h"
+#include "../uart.h"
 
 uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
 
@@ -22,7 +23,8 @@ uint8_t search_sensors(void)
 	uint8_t id[OW_ROMCODE_SIZE];
 	uint8_t diff, nSensors;
 
-	#if DS_DEBUG > 0	
+	#if DS_DEBUG > 0
+		rprintfInit(uartSendByte);	
 		rprintf("Scanning Bus for DS18X20\r\n");
 	#endif
 		
@@ -49,7 +51,7 @@ uint8_t search_sensors(void)
 		}
 		
 		for ( i=0; i < OW_ROMCODE_SIZE; i++ )
-		gSensorIDs[nSensors][i] = id[i];
+			gSensorIDs[nSensors][i] = id[i];
 		
 		nSensors++;
 	}
@@ -82,25 +84,18 @@ uint8_t DS18X20_find_sensor( uint8_t *diff, uint8_t id[] )
 }
 
 
-uint16_t readTempSensor(int senzor)
+void readTempSensor(int16_t *s1, int16_t *s2)
 {
-	switch(senzor)
-	{
-		case 1:
-			ow_set_bus(&SENZOR1_IN,&SENZOR1_PORT,&SENZOR1_DDR,SENZOR1_P);
-			break;
-		case 2:
-			ow_set_bus(&SENZOR2_IN,&SENZOR2_PORT,&SENZOR2_DDR,SENZOR2_P);				
-	}
-	
-	int noSensors = search_sensors();
-	int16_t decicelsius;
+	ow_set_bus(&DSB_IN,&DSB_PORT,&DSB_DDR,DSB);				
+		
+	search_sensors();
+
 	#if DS_DEBUG > 0 	
 		rprintf( " DS18X20 Sensor(s) available: %d\r\n",noSensors );
 	#endif
-	uint8_t i;
 
 	#if DS_DEBUG > 0		
+	uint8_t i;
 	for ( i = 0; i < noSensors; i++ ) {
 			rprintf( "Sensor# %d is a ",i+1 );
 		if ( gSensorIDs[i][0] == DS18S20_FAMILY_CODE ) {
@@ -120,21 +115,21 @@ uint16_t readTempSensor(int senzor)
 		rprintf( " powered\r\n" );
 	}
 	#endif	
-	
-	if ( noSensors == 1 ) {
-		#if DS_DEBUG > 0
-			rprintf("\r\nThere is only one sensor "
-			"-> Demo of \"DS18X20_read_decicelsius_single\":\r\n" );
-		#endif
-		i = gSensorIDs[0][0]; // family-code for conversion-routine
-		DS18X20_start_meas( DS18X20_POWER_PARASITE, NULL );
+
+
+	if ( DS18X20_start_meas( DS18X20_POWER_PARASITE, &gSensorIDs[1][0] ) == DS18X20_OK ) 
+	{
 		_delay_ms( DS18B20_TCONV_12BIT );
-		DS18X20_read_decicelsius_single( i, &decicelsius );
-		#if DS_DEBUG > 0
-			rprintf("%d\r\n", decicelsius );
-		#endif
+		if ( DS18X20_read_decicelsius( &gSensorIDs[1][0], s1) != DS18X20_OK )
+			*s1 = 2500;
 	}
-	return decicelsius;
+		
+	if ( DS18X20_start_meas( DS18X20_POWER_PARASITE, &gSensorIDs[0][0] ) == DS18X20_OK )
+	{
+		_delay_ms( DS18B20_TCONV_12BIT );
+		if ( DS18X20_read_decicelsius( &gSensorIDs[0][0], s2) != DS18X20_OK )
+			*s2 = 2500;
+	}
 }
 
 uint8_t DS18X20_start_meas( uint8_t with_power_extern, uint8_t id[])
@@ -293,3 +288,90 @@ uint8_t DS18X20_get_power_status( uint8_t id[] )
 	ow_reset();
 	return ( pstat ) ? DS18X20_POWER_EXTERN : DS18X20_POWER_PARASITE;
 }
+
+static int32_t DS18X20_raw_to_maxres( uint8_t familycode, uint8_t sp[] )
+{
+	uint16_t measure;
+	uint8_t  negative;
+	int32_t  temperaturevalue;
+
+	measure = sp[0] | (sp[1] << 8);
+	//measure = 0xFF5E; // test -10.125
+	//measure = 0xFE6F; // test -25.0625
+
+	if( familycode == DS18S20_FAMILY_CODE ) {   // 9 -> 12 bit if 18S20
+		/* Extended measurements for DS18S20 contributed by Carsten Foss */
+		measure &= (uint16_t)0xfffe;   // Discard LSB, needed for later extended precicion calc
+		measure <<= 3;                 // Convert to 12-bit, now degrees are in 1/16 degrees units
+		measure += ( 16 - sp[6] ) - 4; // Add the compensation and remember to subtract 0.25 degree (4/16)
+	}
+
+	// check for negative
+	if ( measure & 0x8000 )  {
+		negative = 1;       // mark negative
+		measure ^= 0xffff;  // convert to positive => (twos complement)++
+		measure++;
+	}
+	else {
+		negative = 0;
+	}
+
+	// clear undefined bits for DS18B20 != 12bit resolution
+	if ( familycode == DS18B20_FAMILY_CODE || familycode == DS1822_FAMILY_CODE ) {
+		switch( sp[DS18B20_CONF_REG] & DS18B20_RES_MASK ) {
+			case DS18B20_9_BIT:
+			measure &= ~(DS18B20_9_BIT_UNDF);
+			break;
+			case DS18B20_10_BIT:
+			measure &= ~(DS18B20_10_BIT_UNDF);
+			break;
+			case DS18B20_11_BIT:
+			measure &= ~(DS18B20_11_BIT_UNDF);
+			break;
+			default:
+			// 12 bit - all bits valid
+			break;
+		}
+	}
+
+	temperaturevalue  = (measure >> 4);
+	temperaturevalue *= 10000;
+	temperaturevalue +=( measure & 0x000F ) * DS18X20_FRACCONV;
+
+	if ( negative ) {
+		temperaturevalue = -temperaturevalue;
+	}
+
+	return temperaturevalue;
+}
+
+
+uint8_t DS18X20_read_maxres( uint8_t id[], int32_t *temperaturevalue )
+{
+	uint8_t sp[DS18X20_SP_SIZE];
+	uint8_t ret;
+	
+	ow_reset();
+	ret = read_scratchpad( id, sp, DS18X20_SP_SIZE );
+	if ( ret == DS18X20_OK ) {
+		*temperaturevalue = DS18X20_raw_to_maxres( id[0], sp );
+	}
+	return ret;
+}
+
+
+uint8_t DS18X20_read_decicelsius( uint8_t id[], int16_t *decicelsius )
+{
+	uint8_t sp[DS18X20_SP_SIZE];
+	uint8_t ret;
+	
+	ow_reset();
+	ret = read_scratchpad( id, sp, DS18X20_SP_SIZE );
+	if ( ret == DS18X20_OK ) {
+		*decicelsius = DS18X20_raw_to_decicelsius( id[0], sp );
+	}
+	return ret;
+}
+
+
+
