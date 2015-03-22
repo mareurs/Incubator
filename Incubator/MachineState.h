@@ -49,8 +49,8 @@
 #define R2_PIN			PINB
 #define R2				PORTB2
 
-#define FIRST_STAGE_TEMP 38
-#define SECOND_STAGE_TEMP 37
+#define FIRST_STAGE_TEMP 38.0
+#define SECOND_STAGE_TEMP 37.0
 #define FIRST_STAGE_HUMIDITY 55
 #define SECOND_STAGE_HUMIDITY 75
 #define MAX_TEMP_DELTA		0.5
@@ -63,6 +63,8 @@ typedef enum
 volatile bool startR1;
 volatile bool startR2;
 bool buzzIsOn;
+double balanceTemperature;
+uint8_t balanceHumidity;
 
 void checkMachineStatus();
 void MachineInit();

@@ -30,7 +30,7 @@ int main(void)
 	{
 		checkMachineStatus();
 		if(menuActivated)
-		menuLoop();
+			menuLoop();
 	}
 
 

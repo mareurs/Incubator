@@ -23,7 +23,7 @@ bool buzzIsOn = false;
 char* LCD_ERROR_MESSAGES[] = {"NIVEL APA SCAZUT","TEMP SUB NIVEL","TEMP PESTE NIVEL","LIPSA SENZOR"};
 
 MachineErrors machineError;
-uint8_t balanceTemperature = FIRST_STAGE_TEMP;
+double balanceTemperature = FIRST_STAGE_TEMP;
 uint8_t balanceHumidity = FIRST_STAGE_HUMIDITY;
 
 int16_t T1 = 0;
