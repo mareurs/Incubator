@@ -123,6 +123,7 @@ void readSHTSensor()
 
 void readWaterSensor()
 {
+	rprintfInit(uartSendByte);
 	ADCSRA = (1 << ADEN);
 	ADCSRA |= (1 << ADSC);
 	while( (ADCSRA & ( 1 << ADSC )) != 0 );
@@ -139,8 +140,7 @@ void readSensors()
 
 void readBSSensors()
 {
-	T1 = readTempSensor(1);
-	T3 = readTempSensor(2);
+	readTempSensor(&T1,&T3);
 }
 
 
@@ -157,11 +157,8 @@ void checkMachineStatus()
   	if( oneSecondPassed)
  	{
  		printToUart();
- 		//printToLCD();
  		oneSecondPassed = false;
  	}
-// 	_delay_ms(200);
-// 	machineError = NONE;	
 }
 
 void checkHumidity()
@@ -408,7 +405,7 @@ void toggleR2()
 void checkWaterSensor()
 {
 	if(waterLevel < 200)
-	raiseError(OUT_OF_WATER);
+		raiseError(OUT_OF_WATER);
 }
 
 void startBuzz()
@@ -421,11 +418,6 @@ void stopBuzz()
 	cbi(BUZZ_PORT,BUZZ);
 }
 
-
-ISR(TIMER0_OVF_vect)
-{
-	
-}
 
 /*
 

@@ -27,17 +27,12 @@
 #include "onewire.h"
 #include <util/delay.h>
 
-#define SENZOR1_PORT	PORTD
-#define SENZOR1_DDR		DDRD
-#define SENZOR1_IN		PIND
-#define SENZOR1_P		PIND2
+#define DSB_PORT	PORTB
+#define DSB_DDR		DDRB
+#define DSB_IN		PINB
+#define DSB			PINB0
 
-#define SENZOR2_PORT	PORTB
-#define SENZOR2_DDR		DDRB
-#define SENZOR2_IN		PINB
-#define SENZOR2_P		PINB0
-
-#define MAXSENSORS	5
+#define MAXSENSORS	2
 
 /* return values */
 #define DS18X20_OK                0x00
@@ -104,9 +99,12 @@
 
 uint8_t search_sensors(void);
 uint8_t DS18X20_find_sensor( uint8_t *diff, uint8_t id[] );
-uint16_t readTempSensor(int senzor);
+void readTempSensor(int16_t* s1, int16_t* s2);
 int16_t DS18X20_raw_to_decicelsius( uint8_t familycode, uint8_t sp[] );
 uint8_t DS18X20_read_decicelsius_single( uint8_t familycode, int16_t *decicelsius );
 uint8_t DS18X20_start_meas( uint8_t with_power_extern, uint8_t id[]);
 uint8_t DS18X20_get_power_status( uint8_t id[] );
+uint8_t DS18X20_read_maxres( uint8_t id[], int32_t *temperaturevalue );
+uint8_t DS18X20_format_from_maxres( int32_t temperaturevalue, char str[], uint8_t n);
+uint8_t DS18X20_read_decicelsius( uint8_t id[], int16_t *decicelsius );
 #endif /* DS18X20_H_ */
