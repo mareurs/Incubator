@@ -175,6 +175,12 @@
     <Compile Include="MemoryManager.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="MenuManager.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MenuManager.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="peripherals\ds18x20\crc8.c">
       <SubType>compile</SubType>
     </Compile>

@@ -9,6 +9,7 @@
 #include "DateTime.h"
 #include <avr/interrupt.h>
 #include <stdbool.h>
+#include "MenuManager.h"
 
 volatile DateTime dateTime;
 
@@ -34,7 +35,6 @@ ISR(TIMER1_COMPA_vect)
 				++dateTime.day;			
 		}
 	}
-	oneSecondPassed = true;
 	if(startR1)
 		toggleR1();
 	if(startR2)
@@ -45,6 +45,7 @@ ISR(TIMER1_COMPA_vect)
 	else
 		stopBuzz();
 	
-	printToLCD();
+	if(!menuActivated)
+		printToLCD();
 }
 

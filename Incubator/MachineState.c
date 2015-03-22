@@ -16,7 +16,6 @@
 #include "peripherals/uart.h"
 #include <stdlib.h>
 
-volatile bool oneSecondPassed = false;
 volatile bool startR1 = false;
 volatile bool startR2 = false;
 bool buzzIsOn = false;
@@ -154,11 +153,6 @@ void checkMachineStatus()
 	if(machineError == NONE)
 		buzzIsOn = false;
 	machineError = NONE;	
-  	if( oneSecondPassed)
- 	{
- 		printToUart();
- 		oneSecondPassed = false;
- 	}
 }
 
 void checkHumidity()
@@ -315,18 +309,19 @@ void printToLCD()
 	rprintfInit(lcd_putc);
 	lcd_gotoXY(1,0);
 	rprintfFloat(3,T1/10.0);
-	rprintfStr(" ");
+	lcd_putc(CELSIUS_DEGREE);
 	rprintfFloat(3,T2/10.0);
-	rprintfStr(" ");
+	lcd_putc(CELSIUS_DEGREE);
 	rprintfFloat(3,T3/10.0);
+	lcd_putc(CELSIUS_DEGREE);
 	lcd_gotoXY(2,0);
-	rprintf("U:%d ", U);
-	rprintf("m:");
+	rprintf("U%d ", U);
+	rprintf("m");
 	rprintfFloat(3,minTemp/10.0);
-	rprintfStr("");
-	rprintf("M:");
+	lcd_putc(CELSIUS_DEGREE);
+	rprintf("M");
 	rprintfFloat(3,maxTemp/10.0);
-	
+	lcd_putc(CELSIUS_DEGREE);
 	lcd_gotoXY(3,0);
 	rprintf("Zi:%d %d:%d:%d", dateTime.day, dateTime.hour, dateTime.minute, dateTime.second);
 }

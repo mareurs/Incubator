@@ -17,20 +17,20 @@
 #include "peripherals/ds18x20/ds18x20.h"
 #include "peripherals/sht21/sht21.h"
 #include "MachineState.h"
+#include "MenuManager.h"
 
 int main(void)
 {
 	lcd_init();
-	uartInit();
-	uartSetBaudRate(9600);
-	rprintfInit(uartSendByte);
-	rprintfStr("Initialize:\n");
 	lcd_puts("Initialize:");
 	MachineInit();
+	initMenuManager();
 	sei();
 	while(1)
 	{
 		checkMachineStatus();
+		if(menuActivated)
+		menuLoop();
 	}
 
 

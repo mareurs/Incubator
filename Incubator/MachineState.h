@@ -60,7 +60,6 @@ typedef enum
 	OUT_OF_WATER, LOW_TEMPERATURE, HIGH_TEMPERATURE, MISSING_SENSOR, NONE
 } MachineErrors;
 
-volatile bool oneSecondPassed;
 volatile bool startR1;
 volatile bool startR2;
 bool buzzIsOn;

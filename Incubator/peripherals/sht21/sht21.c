@@ -146,7 +146,7 @@ uint8_t SHT21_Read(int16_t *temperature,uint8_t *humidity)
 	else
 	{
 		Sht21Error |= ERROR_SHT21_CRC_TEMP;
-		*humidity = 250;
+		//*humidity = 250;
 	}
 	
 	//if(I2cError) Sht21Error |= ERROR_SHT21_I2C;
