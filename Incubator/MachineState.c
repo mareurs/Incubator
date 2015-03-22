@@ -79,7 +79,7 @@ void initPins()
 {
 	initDDRDs();	
 	initADC();
-	initPWMTimer();
+	//initPWMTimer();
 	setFanSpeed(80);
 }
 
@@ -154,12 +154,12 @@ void checkMachineStatus()
 	if(machineError == NONE)
 		buzzIsOn = false;
 	machineError = NONE;	
-//  	if( oneSecondPassed)
-//  	{
-//  		//printToUart();
-//  		//printToLCD();
-//  		oneSecondPassed = false;
-//  	}
+  	if( oneSecondPassed)
+ 	{
+ 		printToUart();
+ 		//printToLCD();
+ 		oneSecondPassed = false;
+ 	}
 // 	_delay_ms(200);
 // 	machineError = NONE;	
 }
@@ -201,8 +201,9 @@ void setMinMax()
 
 void checkTemperatures()
 {
-	bool startResistor = false;
 	setMinMax();
+	
+	bool startResistor = false;
 	double t1 = T1/10;
 	double t2 = T2/10;
 	double t3 = T3/10;

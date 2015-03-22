@@ -21,10 +21,10 @@
 int main(void)
 {
 	lcd_init();
-	//uartInit();
-	//uartSetBaudRate(9600);
-	//rprintfInit(uartSendByte);
-	//rprintfStr("Initialize:\n");
+	uartInit();
+	uartSetBaudRate(9600);
+	rprintfInit(uartSendByte);
+	rprintfStr("Initialize:\n");
 	lcd_puts("Initialize:");
 	MachineInit();
 	sei();
