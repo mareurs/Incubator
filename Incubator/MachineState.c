@@ -33,7 +33,7 @@ int16_t T3 = 0;
 uint8_t U = 0;
 uint8_t humidityValue = 0;
 uint8_t fanValue = 80;
-int16_t minTemp = 100;
+int16_t minTemp = 1000;
 int16_t maxTemp = 0;
 int8_t waterLevel;
 
@@ -110,9 +110,9 @@ void initPWMTimer()
 {
 	DDRD |= 1 << PORTD6;
 	TCCR0A = 1 << COM0A1 | 1 << WGM01 | 1 << WGM00;
-	OCR0A = 0;
+	OCR0A = 200;
 	TIMSK0 = 1 << TOIE0;
-	TCCR0B = 1 << CS00 | 1 << CS02;	
+	TCCR0B = 1 << CS00 | 1 << CS02;		
 }
 
 
@@ -166,7 +166,7 @@ void checkMachineStatus()
 
 void checkHumidity()
 {
-	if (humidityValue > balanceHumidity)
+	if (humidityValue < balanceHumidity)
 	{
 		incrementFanSpeed();
 		cbi(HUMRELAY_PORT,HUMRELAY);
@@ -204,9 +204,9 @@ void checkTemperatures()
 	setMinMax();
 	
 	bool startResistor = false;
-	double t1 = T1/10;
-	double t2 = T2/10;
-	double t3 = T3/10;
+	double t1 = T1/10.0;
+	double t2 = T2/10.0;
+	double t3 = T3/10.0;
 	
 	if(t1 < 0 || t1 > 100)
 	{
@@ -235,23 +235,26 @@ void checkTemperatures()
 	if(t1 < balanceTemperature)
 	{
 		startResistor = true;
-		if(t1 < balanceTemperature*10)
+		if(t1 < balanceTemperature - 1)
 		{
 			turnR1On();
 			startResistor = false;
 		}
 		else
-		turnR1Off();
+			turnR1Off();
 		if(startResistor)
-		startR1 = true;
+			startR1 = true;
 	}
 	else
-	startR1 = false;
+	{
+		turnR1Off();
+		startR1 = false;
+	}
 	
 	if(t3 < balanceTemperature)
 	{
 		startResistor = true;
-		if(t2 < balanceTemperature - 1)
+		if(t3 < balanceTemperature - 1)
 		{
 			turnR2On();
 			startResistor = false;
@@ -262,16 +265,20 @@ void checkTemperatures()
 			startR2 = true;
 	}
 	else
+	{
 		startR2 = false;
-		
+		turnR2Off();
+	}
 	if(t1 < balanceTemperature - MAX_TEMP_DELTA || t2 < balanceTemperature - MAX_TEMP_DELTA || t3 < balanceTemperature - MAX_TEMP_DELTA )
-	raiseError(LOW_TEMPERATURE);
+		raiseError(LOW_TEMPERATURE);
 	if(t1 > balanceTemperature + MAX_TEMP_DELTA  || t2 > balanceTemperature + MAX_TEMP_DELTA  || t3 > balanceTemperature + MAX_TEMP_DELTA)
-	raiseError(HIGH_TEMPERATURE);
+		raiseError(HIGH_TEMPERATURE);
 }
 
 void raiseError(MachineErrors error)
 {
+	lcd_gotoXY(4,0);
+	lcd_puts("                ");
 	switch(error)
 	{
 		case OUT_OF_WATER:
@@ -295,11 +302,19 @@ void raiseError(MachineErrors error)
 			buzzIsOn = true;
 			break;		
 	}
-	_delay_ms(500);
+	_delay_ms(2000);
 }
 
 void printToLCD()
 {
+	//partially clear display
+	lcd_gotoXY(1,0);
+	lcd_puts("                ");
+	lcd_gotoXY(2,0);
+	lcd_puts("                ");
+	lcd_gotoXY(3,0);
+	lcd_puts("                ");
+	
 	rprintfInit(lcd_putc);
 	lcd_gotoXY(1,0);
 	rprintfFloat(3,T1/10.0);
@@ -407,6 +422,10 @@ void stopBuzz()
 }
 
 
+ISR(TIMER0_OVF_vect)
+{
+	
+}
 
 /*
 

@@ -119,8 +119,8 @@ uint8_t SHT21_Read(int16_t *temperature,uint8_t *humidity)
 	}
 	else
 	{
-		*temperature = 250;
 		Sht21Error |= ERROR_SHT21_CRC_TEMP;
+		*temperature = 2500;
 	}
 	
 	//=== Humidity ===================================================
