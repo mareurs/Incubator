@@ -67,6 +67,7 @@ void showMainMenu()
 
 void menuLoop()
 {
+	initMenuManager();
 	showMainMenu();
 	menuIsClicked = false;
 	for(;;)

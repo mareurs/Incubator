@@ -73,5 +73,6 @@ void toggleR1();
 void toggleR2();
 void startBuzz();
 void stopBuzz();
+void readWaterSensor();
 
 #endif /* MACHINESTATE_H_ */

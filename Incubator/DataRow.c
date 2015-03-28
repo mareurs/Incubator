@@ -10,7 +10,7 @@
 #include <string.h>
 
 static const uint8_t DATAROW_SIZE;
-static uint16_t currentIndex = 0;
+//static uint16_t currentIndex = 0;
 
 void serialize(uint8_t* result, const DataRow* data)
 {

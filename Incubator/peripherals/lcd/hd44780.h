@@ -38,8 +38,8 @@ Version:   1.11
 
 #define LCD_BUSY                7    // DB7: LCD is busy
 
-#define CELSIUS_DEGREE			223
-#define MARKER					165
+#define CELSIUS_DEGREE			198		//223
+#define MARKER					199		//165
 
 void lcd_init();
 void lcd_command(uint8_t cmd);

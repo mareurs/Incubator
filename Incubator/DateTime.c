@@ -30,6 +30,9 @@ ISR(TIMER1_COMPA_vect)
 		dateTime.second = 0;
 		if(++dateTime.minute >= 60)
 		{
+			if(dateTime.minute % 15 == 0)
+				readWaterSensor();
+			
 			dateTime.minute = 0;
 			if(++dateTime.hour >= 24)
 				++dateTime.day;			

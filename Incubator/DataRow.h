@@ -12,7 +12,7 @@
 #include <inttypes.h>
 
 static const uint8_t DATAROW_SIZE = 8;	//be carefull of packing
-static uint16_t currentIndex;
+//static uint16_t currentIndex;
 
 typedef struct
 {

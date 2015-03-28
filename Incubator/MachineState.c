@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include "peripherals/uart.h"
 #include <stdlib.h>
+#include <avr/interrupt.h>
+#include "MenuManager.h"
 
 volatile bool startR1 = false;
 volatile bool startR2 = false;
@@ -31,15 +33,15 @@ int16_t T2 = 0;
 int16_t T3 = 0;
 uint8_t U = 0;
 uint8_t humidityValue = 0;
-uint8_t fanValue = 80;
+uint8_t fanValue = 50;
 int16_t minTemp = 1000;
 int16_t maxTemp = 0;
-int8_t waterLevel;
+volatile uint8_t waterLevel;
 
 // Protos
 void initPins();
 void initDDRDs();
-void setFanSpeed(double percent);
+void setFanSpeed(uint8_t percent);
 void initADC();
 void initPWMTimer();
 void readSHTSensor();
@@ -78,8 +80,8 @@ void initPins()
 {
 	initDDRDs();	
 	initADC();
-	//initPWMTimer();
-	setFanSpeed(80);
+	initPWMTimer();
+	setFanSpeed(fanValue);
 }
 
 void initDDRDs()
@@ -88,28 +90,29 @@ void initDDRDs()
 	sbi(R2_DDR,R2);
 	sbi(BUZZ_DDR, BUZZ);
 	sbi(HUMRELAY_DDR,HUMRELAY);
-	cbi(WATER_DDR, WATER);
 	sbi(OVRHEAT_DDR,OVRHEAT);
 	sbi(ROLLING_DDR,ROLLING);
 }
 
-void setFanSpeed(double percent)
+void setFanSpeed(uint8_t percent)
 {
-	OCR0A = (percent / 100) * 255;
+	OCR0A = (percent / 100.0) * 255;
 }
 
 void initADC()
 {
-	ADMUX = (1<< REFS0);				//Use ADC as refernce
-	ADMUX = (1 << ADLAR) | (1 << ADC2D ); // 8bit conversion + ADC2
-	ADMUX |= (1 << ADC);
+	ADMUX = (1<< REFS0);				//Use AVCC as refernce
+	ADMUX |= (1 << ADLAR);				// 8bit conversion
+	ADMUX &= 0xF0;						// Make last 4bits 0
+	ADMUX |= 0b00000010;				// Choose channel ADC2
+	ADCSRA = (1 << ADEN) | (1 << ADIE) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
 }
 
 void initPWMTimer()
 {
-	DDRD |= 1 << PORTD6;
+	sbi(FAN_DDR, FAN);
 	TCCR0A = 1 << COM0A1 | 1 << WGM01 | 1 << WGM00;
-	OCR0A = 200;
+	OCR0A = fanValue;
 	TIMSK0 = 1 << TOIE0;
 	TCCR0B = 1 << CS00 | 1 << CS02;		
 }
@@ -122,12 +125,7 @@ void readSHTSensor()
 
 void readWaterSensor()
 {
-	rprintfInit(uartSendByte);
-	ADCSRA = (1 << ADEN);
 	ADCSRA |= (1 << ADSC);
-	while( (ADCSRA & ( 1 << ADSC )) != 0 );
-	waterLevel = ADCH;
-	ADCSRA = 0;
 }
 
 void readSensors()
@@ -145,14 +143,14 @@ void readBSSensors()
 
 void checkMachineStatus()
 {
+	initPins();
 	readSensors();	
-	readWaterSensor();
 	checkHumidity();
 	checkTemperatures();
 	checkWaterSensor();
 	if(machineError == NONE)
 		buzzIsOn = false;
-	machineError = NONE;	
+	machineError = NONE;
 }
 
 void checkHumidity()
@@ -270,6 +268,8 @@ void raiseError(MachineErrors error)
 {
 	lcd_gotoXY(4,0);
 	lcd_puts("                ");
+	if(menuActivated)
+		return;
 	switch(error)
 	{
 		case OUT_OF_WATER:
@@ -291,6 +291,8 @@ void raiseError(MachineErrors error)
 			lcd_gotoXY(4,0);
 			lcd_puts(LCD_ERROR_MESSAGES[MISSING_SENSOR]);
 			buzzIsOn = true;
+			break;
+		case NONE:
 			break;		
 	}
 	_delay_ms(2000);
@@ -305,23 +307,23 @@ void printToLCD()
 	lcd_puts("                ");
 	lcd_gotoXY(3,0);
 	lcd_puts("                ");
-	
+
 	rprintfInit(lcd_putc);
 	lcd_gotoXY(1,0);
 	rprintfFloat(3,T1/10.0);
-	lcd_putc(CELSIUS_DEGREE);
+	lcd_putc(' ');
 	rprintfFloat(3,T2/10.0);
-	lcd_putc(CELSIUS_DEGREE);
+	lcd_putc(' ');
 	rprintfFloat(3,T3/10.0);
-	lcd_putc(CELSIUS_DEGREE);
+	lcd_putc(' ');
 	lcd_gotoXY(2,0);
 	rprintf("U%d ", U);
 	rprintf("m");
 	rprintfFloat(3,minTemp/10.0);
-	lcd_putc(CELSIUS_DEGREE);
+	lcd_putc(' ');
 	rprintf("M");
 	rprintfFloat(3,maxTemp/10.0);
-	lcd_putc(CELSIUS_DEGREE);
+	lcd_putc(' ');
 	lcd_gotoXY(3,0);
 	rprintf("Zi:%d %d:%d:%d", dateTime.day, dateTime.hour, dateTime.minute, dateTime.second);
 }
@@ -349,12 +351,16 @@ void printToUart()
 
 void incrementFanSpeed()
 {
-	setFanSpeed(++fanValue);
+	if( fanValue + 5 <= 100 )
+		fanValue+= 5;
+	setFanSpeed(fanValue);
 }
 
 void decrementFanSpeed()
 {
-	setFanSpeed(--fanValue);
+	if( fanValue - 5 >= 0)
+		fanValue-= 5;
+	setFanSpeed(fanValue);
 }
 
 void startHRelay()
@@ -399,7 +405,7 @@ void toggleR2()
 
 void checkWaterSensor()
 {
-	if(waterLevel < 200)
+	if(waterLevel < 150)
 		raiseError(OUT_OF_WATER);
 }
 
@@ -413,6 +419,17 @@ void stopBuzz()
 	cbi(BUZZ_PORT,BUZZ);
 }
 
+ISR(ADC_vect)
+{
+	waterLevel = ADCH;
+	ADCSRA &= ~(1 << ADSC);
+}
+
+
+ISR(TIMER0_OVF_vect)
+{
+	
+}
 
 /*
 
