@@ -219,6 +219,15 @@ void showHumidMenu()
 	okIsClicked = menuIsClicked = false;
 }
 
+void printDateTime()
+{
+	lcd_gotoXY(2,0);
+	rprintf("                ");
+	lcd_gotoXY(2,0);
+	rprintf("Zi:%d %d:%d:%d", dateTime.day, dateTime.hour, dateTime.minute, dateTime.second);
+}
+
+
 void showTimeMenu()
 {
 	lcd_clrscr();
@@ -227,12 +236,37 @@ void showTimeMenu()
 	rprintf("Zi:%d %d:%d:%d", dateTime.day, dateTime.hour, dateTime.minute, dateTime.second);
 	for(;;)
 	{
+		if(upIsClicked)
+		{
+			if(dateTime.day == 22)
+				continue;
+			dateTime.day++;
+			dateTime.hour = dateTime.minute = dateTime.second = 0;
+			lcd_gotoXY(2,0);
+			printDateTime();
+			_delay_ms(200);
+			upIsClicked = false;
+		}
+		
+		if(downIsClicked)
+		{
+			if(dateTime.day == 0)
+				continue;
+			dateTime.day--;
+			dateTime.hour = dateTime.minute = dateTime.second = 0;			
+			printDateTime();
+			_delay_ms(200);
+			downIsClicked = false;
+		}
+		
 		if(okIsClicked || menuIsClicked)
-			break;			
+		{
+			okIsClicked = menuIsClicked = false;
+			break;						
+		}
 		_delay_ms(100);	
 	}
 }
-
 
 void showSubMenu(uint8_t position)
 {
