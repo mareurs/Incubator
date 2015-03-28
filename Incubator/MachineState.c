@@ -32,7 +32,6 @@ int16_t T1 = 0;
 int16_t T2 = 0;
 int16_t T3 = 0;
 uint8_t U = 0;
-uint8_t humidityValue = 0;
 uint8_t fanValue = 50;
 int16_t minTemp = 1000;
 int16_t maxTemp = 0;
@@ -155,15 +154,15 @@ void checkMachineStatus()
 
 void checkHumidity()
 {
-	if (humidityValue < balanceHumidity)
+	if (U < balanceHumidity)
 	{
 		incrementFanSpeed();
-		cbi(HUMRELAY_PORT,HUMRELAY);
+		sbi(HUMRELAY_PORT,HUMRELAY);
 	}
 	else
 	{
 		decrementFanSpeed();
-		sbi(HUMRELAY_PORT,HUMRELAY);
+		cbi(HUMRELAY_PORT,HUMRELAY);
 	}
 }
 
@@ -311,9 +310,9 @@ void printToLCD()
 	rprintfInit(lcd_putc);
 	lcd_gotoXY(1,0);
 	rprintfFloat(3,T1/10.0);
-	lcd_putc(' ');
+	lcd_putc('  ');
 	rprintfFloat(3,T2/10.0);
-	lcd_putc(' ');
+	lcd_putc('  ');
 	rprintfFloat(3,T3/10.0);
 	lcd_putc(' ');
 	lcd_gotoXY(2,0);
@@ -351,15 +350,15 @@ void printToUart()
 
 void incrementFanSpeed()
 {
-	if( fanValue + 5 <= 100 )
-		fanValue+= 5;
+	if( fanValue + 10 <= 100 )
+		fanValue+= 10;
 	setFanSpeed(fanValue);
 }
 
 void decrementFanSpeed()
 {
-	if( fanValue - 5 >= 0)
-		fanValue-= 5;
+	if( fanValue - 10 >= 0)
+		fanValue-= 10;
 	setFanSpeed(fanValue);
 }
 
