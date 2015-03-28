@@ -29,11 +29,9 @@
 #define OK_BTN_DDR	DDRC
 #define OK_BTN_PORT	PORTC
 #define OK_BTN_PIN	PINC
-#define OK_BTN		PORTC0
+#define OK_BTN		PORTC3
 
 volatile bool menuActivated;
-
-enum{MAIN, TEMP, HUMID, TIME, NO_MENU};
 
 void initMenuManager();
 void menuLoop();

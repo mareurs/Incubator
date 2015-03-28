@@ -20,7 +20,16 @@
 volatile bool menuActivated = false;
 volatile uint8_t previousValue = 0xFF;
 uint8_t position = 2;
-uint8_t menu = NO_MENU;
+volatile bool menuIsClicked = false;
+volatile bool okIsClicked = false;
+volatile bool downIsClicked = false;
+volatile bool upIsClicked = false;
+
+//Protos
+
+void goDown();
+void goUp();
+void showSubMenu(uint8_t position);
 
 void initMenuManager()
 {
@@ -36,11 +45,12 @@ void initMenuManager()
 	EIMSK |= 1 << INT0;
 	PCICR |= 1 << PCIE2 | 1 << PCIE1;
 	PCMSK2 = 1 << PCINT16 | 1<<PCINT17;
-	PCMSK1 = 1 << PCINT8;
+	PCMSK1 = 1 << PCINT11;
 }
 
 void showMainMenu()
 {
+	ADCSRA = 0;	
 	lcd_clrscr();
 	lcd_gotoXY(1,0);
 	rprintfInit(lcd_putc);
@@ -48,20 +58,40 @@ void showMainMenu()
 	lcd_gotoXY(position,0);
 	lcd_putc(MARKER);
 	lcd_gotoXY(2,2);
-	rprintf("Set Temp");
+	rprintf("SET TEMP");
 	lcd_gotoXY(3,2);
-	rprintf("Set Umid");
+	rprintf("SET UMID");
 	lcd_gotoXY(4,2);
-	rprintf("Set Time");
+	rprintf("SET TIMP");
 }
 
 void menuLoop()
 {
 	showMainMenu();
-	while(menuActivated)
+	menuIsClicked = false;
+	for(;;)
 	{
-		_delay_ms(1000);
+		if(upIsClicked)
+		{
+			upIsClicked = false;
+			goUp();
+		}
+		else if(downIsClicked)
+		{
+			downIsClicked = false;
+			goDown();
+		}
+		else if(okIsClicked)
+		{
+			okIsClicked = false;
+			showSubMenu(position);
+			showMainMenu();
+		}
+		else if(menuIsClicked)
+			break;
+		_delay_ms(100);
 	}
+	menuIsClicked = okIsClicked = menuActivated = false;
 }
 
 
@@ -70,7 +100,7 @@ void goDown()
 	lcd_gotoXY(position,0);
 	lcd_putc(' ');
 	if(position < 4)
-	position++;
+		position++;
 	lcd_gotoXY(position, 0);
 	lcd_putc(MARKER);	
 }
@@ -80,7 +110,7 @@ void goUp()
 	lcd_gotoXY(position,0);
 	lcd_putc(' ');
 	if(position > 2)
-	position--;
+		position--;
 	lcd_gotoXY(position, 0);
 	lcd_putc(MARKER);	
 }
@@ -95,7 +125,7 @@ void decreaseTemp()
 		lcd_puts("         ");
 		lcd_gotoXY(2,0);
 		rprintfFloat(3, balanceTemperature);
-		_delay_ms(50);
+		_delay_ms(200);
 	}
 }
 
@@ -108,7 +138,7 @@ void increaseTemp()
 		lcd_puts("         ");
 		lcd_gotoXY(2,0);
 		rprintfFloat(3, balanceTemperature);
-		_delay_ms(50);
+		_delay_ms(200);
 	}
 }
 
@@ -121,7 +151,7 @@ void decreaseHumid()
 		lcd_puts("         ");
 		lcd_gotoXY(2,0);
 		rprintf("%d",balanceHumidity);
-		_delay_ms(50);
+		_delay_ms(200);
 	}
 }
 
@@ -134,68 +164,72 @@ void increaseHumid()
 		lcd_puts("         ");
 		lcd_gotoXY(2,0);
 		rprintf("%d",balanceHumidity);		
-		_delay_ms(50);
+		_delay_ms(200);
 	}
-}
-
-void downClicked()
-{
-	switch(menu)
-	{
-		case MAIN:
-			goDown();
-			break;
-		case TEMP:
-			decreaseTemp();
-			break;
-		case HUMID:
-			decreaseHumid();
-			break;			
-	}	
-}
-
-void upClicked()
-{
-	switch(menu)
-	{
-		case MAIN:
-			goUp();
-			break;
-		case TEMP:
-			increaseTemp();
-			break;
-		case HUMID:
-			increaseHumid();
-			break;
-	}
-
 }
 
 void showTempMenu()
 {
-	menu = TEMP;
 	lcd_clrscr();
-	rprintf("Temp Menu");
+	rprintf("   -SET TEMP-");
 	lcd_gotoXY(2,0);
 	rprintfFloat(4,balanceTemperature);
+	for(;;)
+	{
+		if(upIsClicked)
+		{
+			increaseTemp();
+			upIsClicked = false;
+		}
+		else if (downIsClicked)
+		{
+			decreaseTemp();
+			downIsClicked = false;
+		}
+		else if(okIsClicked || menuIsClicked)
+			break;
+		_delay_ms(100);
+	}
+	okIsClicked = menuIsClicked = false;	
 }
 
 void showHumidMenu()
 {
-	menu = HUMID;
 	lcd_clrscr();
-	rprintf("Umid Menu");
+	rprintf(" -SET UMIDITATE-");
 	lcd_gotoXY(2,0);
 	rprintf("%d",balanceHumidity);
+	for(;;)
+	{				
+		if(upIsClicked)
+		{			
+			increaseHumid();
+			upIsClicked = false;
+		}
+		else if (downIsClicked)
+		{
+			decreaseHumid();
+			downIsClicked = false;				
+		}
+		else if(okIsClicked || menuIsClicked)
+			break;
+		_delay_ms(100);
+	}
+	okIsClicked = menuIsClicked = false;
 }
 
 void showTimeMenu()
 {
-	menu = TIME;
 	lcd_clrscr();
-	rprintf("Time Menu");
+	rprintf("   -SET TIMP-");
 	lcd_gotoXY(2,0);
 	rprintf("Zi:%d %d:%d:%d", dateTime.day, dateTime.hour, dateTime.minute, dateTime.second);
+	for(;;)
+	{
+		if(okIsClicked || menuIsClicked)
+			break;			
+		_delay_ms(100);	
+	}
 }
 
 
@@ -215,40 +249,23 @@ void showSubMenu(uint8_t position)
 	}
 }
 
-void okClicked()
-{
-	switch(menu)
-	{
-		case MAIN:
-			showSubMenu(position);
-			break;
-	}
-}
-
-
 
 ISR(INT0_vect)
 {
-	if(menu == MAIN)
-		menuActivated = false;
-	else
-	{
-		menuActivated = true;
-		menu = MAIN;		
-		showMainMenu();
-	}
+	menuIsClicked = true;
+	menuActivated = true;
 }
 
 ISR(PCINT2_vect)
 {
 	if( (DOWN_BTN_PIN & (1 << DOWN_BTN)) == 0)
-		downClicked();
+		downIsClicked = true;
 	else if((UP_BTN_PIN & (1 << UP_BTN)) == 0)
-		upClicked();
+		upIsClicked = true;
 }
 
 ISR(PCINT1_vect)
 {
 	if( (OK_BTN_PIN & (1 << OK_BTN)) == 0)
-		okClicked();	
+		okIsClicked = true;	
 }
