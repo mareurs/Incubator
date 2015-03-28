@@ -13,7 +13,7 @@
 
 #define SHT_ADDRESS	0x80
 
-void I2C_Write1(uint8_t data);
+void I2C_Write(uint8_t data);
 void I2C_Read(uint8_t *data,uint8_t length);
 
 

@@ -89,12 +89,12 @@ uint8_t SHT21_Read(int16_t *temperature,uint8_t *humidity)
 	
 	//=== Softreset ==================================================
 	
-	I2C_Write1(0xFE);			// softreset < 15ms
+	I2C_Write(0xFE);			// softreset < 15ms
 	_delay_ms(50);
 	
 	//=== Temperature =================================================
 
-	I2C_Write1(0xF3);			// start temperature measurement
+	I2C_Write(0xF3);			// start temperature measurement
 	_delay_ms(260);				// Temperature@14Bit typ=66ms max=85ms
 	I2C_Read(buf,3);			// read temperature data
 	
@@ -125,7 +125,7 @@ uint8_t SHT21_Read(int16_t *temperature,uint8_t *humidity)
 	
 	//=== Humidity ===================================================
 
-	I2C_Write1(0xF5);			// start humidity measurement
+	I2C_Write(0xF5);			// start humidity measurement
 	_delay_ms(260);				// RH@12Bit typ=22ms max=20ms 
 	I2C_Read(buf,3);			// read humidity data
 		
