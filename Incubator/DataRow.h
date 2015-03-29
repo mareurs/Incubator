@@ -16,7 +16,6 @@ static const uint8_t DATAROW_SIZE = 8;	//be carefull of packing
 
 typedef struct
 {
-	uint16_t index;
 	uint16_t T1;
 	uint16_t T2;
 	uint16_t T3;

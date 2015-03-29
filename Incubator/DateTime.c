@@ -10,6 +10,7 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 #include "MenuManager.h"
+#include "MachineState.h"
 
 volatile DateTime dateTime;
 
@@ -23,32 +24,62 @@ void initDateTime()
 	dateTime.day = 1;
 }
 
+
 ISR(TIMER1_COMPA_vect)
 {
-	if(++dateTime.second >= 60)
+	static uint8_t t0 = 0;
+	static bool startRolling = false;
+	
+	if(startRolling)
 	{
-		dateTime.second = 0;
-		if(++dateTime.minute >= 60)
+		t0++;
+		if(t0 == 6)
 		{
-			if(dateTime.minute % 15 == 0)
-				readWaterSensor();
-			
-			dateTime.minute = 0;
-			if(++dateTime.hour >= 24)
-				++dateTime.day;			
+			startRolling = false;
+			cbi(ROLLING_PORT, ROLLING);
 		}
 	}
-	if(startR1)
-		toggleR1();
-	if(startR2)
-		toggleR2();
 	
-	if(buzzIsOn)
-		startBuzz();
-	else
-		stopBuzz();
+	if(++dateTime.second >= 60)
+	{			
+		dateTime.second = 0;
+		if(dateTime.minute % 15 == 0)
+		readWaterSensor();
+					
+		if( dateTime.minute%5 == 0)
+		fiveMinutesPassed = true;
+
+		if(++dateTime.minute >= 60)
+		{
+			dateTime.minute = 0;
+			
+			if(doRolling)
+			{
+				sbi(ROLLING_PORT, ROLLING);
+				t0 = 0;
+				startRolling = true;			
+			}
+			if(++dateTime.hour >= 24)
+				++dateTime.day;
+		}
+	}
+
+  	if(!menuActivated)
+	{
+		if(startR1)
+			toggleR1();
+		if(startR2)
+			toggleR2();
 	
-	if(!menuActivated)
-		printToLCD();
+		if(buzzIsOn)
+			startBuzz();
+		else
+			stopBuzz();
+	
+		printToLCD();		 
+	}
+
+	
+
 }
 

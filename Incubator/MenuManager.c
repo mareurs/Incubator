@@ -16,10 +16,12 @@
 #include <util/delay.h>
 #include "MachineState.h"
 #include "DateTime.h"
+#include "MemoryManager.h"
+#include "rprintf.h"
 
 volatile bool menuActivated = false;
 volatile uint8_t previousValue = 0xFF;
-uint8_t position = 2;
+uint8_t position = 1;
 volatile bool menuIsClicked = false;
 volatile bool okIsClicked = false;
 volatile bool downIsClicked = false;
@@ -50,28 +52,27 @@ void initMenuManager()
 
 void showMainMenu()
 {
-	ADCSRA = 0;	
+	initMenuManager();
 	lcd_clrscr();
-	lcd_gotoXY(1,0);
 	rprintfInit(lcd_putc);
-	rprintf(" -- MAIN MENU --");
+	lcd_gotoXY(1,2);
+	rprintf("SET TEMP");
+	lcd_gotoXY(2,2);
+	rprintf("SET UMID");
+	lcd_gotoXY(3,2);
+	rprintf("SET TIMP");
+	lcd_gotoXY(4,2);
+	rprintf("DESCARCARE");
 	lcd_gotoXY(position,0);
 	lcd_putc(MARKER);
-	lcd_gotoXY(2,2);
-	rprintf("SET TEMP");
-	lcd_gotoXY(3,2);
-	rprintf("SET UMID");
-	lcd_gotoXY(4,2);
-	rprintf("SET TIMP");
 }
 
 void menuLoop()
 {
-	initMenuManager();
-	showMainMenu();
 	menuIsClicked = false;
 	for(;;)
 	{
+		showMainMenu();
 		if(upIsClicked)
 		{
 			upIsClicked = false;
@@ -86,7 +87,6 @@ void menuLoop()
 		{
 			okIsClicked = false;
 			showSubMenu(position);
-			showMainMenu();
 		}
 		else if(menuIsClicked)
 			break;
@@ -110,7 +110,7 @@ void goUp()
 {
 	lcd_gotoXY(position,0);
 	lcd_putc(' ');
-	if(position > 2)
+	if(position > 1)
 		position--;
 	lcd_gotoXY(position, 0);
 	lcd_putc(MARKER);	
@@ -192,6 +192,8 @@ void showTempMenu()
 		_delay_ms(100);
 	}
 	okIsClicked = menuIsClicked = false;	
+	uint16_t t = balanceTemperature * 10;
+	saveBalanceTemp(t);
 }
 
 void showHumidMenu()
@@ -217,6 +219,7 @@ void showHumidMenu()
 		_delay_ms(100);
 	}
 	okIsClicked = menuIsClicked = false;
+	saveBalanceHumid(balanceHumidity);
 }
 
 void printDateTime()
@@ -250,7 +253,7 @@ void showTimeMenu()
 		
 		if(downIsClicked)
 		{
-			if(dateTime.day == 0)
+			if(dateTime.day == 1)
 				continue;
 			dateTime.day--;
 			dateTime.hour = dateTime.minute = dateTime.second = 0;			
@@ -268,18 +271,41 @@ void showTimeMenu()
 	}
 }
 
+void showDownloadMenu()
+{
+	lcd_clrscr();
+	rprintf("Pornesc in 10s");
+	for(int i = 0; i < 10;i ++)
+	{
+		lcd_clrscr();
+		lcd_gotoXY(2,8);
+		rprintf("%d", 10 - i);		
+		_delay_ms(1000);
+	}
+	lcd_clrscr();
+	rprintf("Descarc ...");
+	sendDataToUart();
+	lcd_clrscr();
+	rprintf("Terminat" );
+	_delay_ms(1000);
+	okIsClicked = false;
+}
+
 void showSubMenu(uint8_t position)
 {
 	switch(position)
 	{
-		case 2:
+		case 1:
 			showTempMenu();
 			break;
-		case 3:
+		case 2:
 			showHumidMenu();
 			break;
-		case 4:
+		case 3:
 			showTimeMenu();
+			break;
+		case 4:
+			showDownloadMenu();
 			break;
 	}
 }

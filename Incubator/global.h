@@ -14,6 +14,9 @@
 #define RPRINTF_FLOAT
 #define CYCLES_PER_US ((F_CPU+500000)/1000000) 	// cpu cycles per microsecond
 
+#define UART_RX_BUFFER_SIZE	80
+#define UART_TX_BUFFER_SIZE 80
+
 typedef void (*USART_FPTR) (char* data);
 extern USART_FPTR USART_Callback;
 

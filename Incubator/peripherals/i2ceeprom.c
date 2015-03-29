@@ -21,6 +21,9 @@
 
 #include "i2c.h"
 #include "i2ceeprom.h"
+#include "lcd/hd44780.h"
+#include "rprintf.h"
+#include <util/delay.h>
 
 // Standard I2C bit rates are:
 // 100KHz for slow speed
@@ -40,9 +43,9 @@ u08 i2ceepromReadByte(u08 i2cAddr, u32 memAddr)
 	packet[0] = (memAddr>>8);
 	packet[1] = (memAddr&0x00FF);
 	// send memory address we wish to access to the memory chip
-	i2cMasterSendNI(i2cAddr, 2, packet);
+	i2cMasterSend(i2cAddr, 2, packet);
 	// retrieve the data at this memory address
-	i2cMasterReceiveNI(i2cAddr, 1, packet);
+	i2cMasterReceive(i2cAddr, 1, packet);
 	// return data
 	return packet[0];
 }
@@ -56,45 +59,48 @@ void i2ceepromWriteByte(u08 i2cAddr, u32 memAddr, u08 data)
 	packet[2] = data;
 	// send memory address we wish to access to the memory chip
 	// along with the data we wish to write
-	i2cMasterSendNI(i2cAddr, 3, packet);
+	i2cMasterSend(i2cAddr, 3, packet);
 }
 
 void i2ceepromWriteBuffer(u32 memAddr, u08* data, u08 length)
 {
-	uint8_t i2cAddress = I2C_ADDRESS;
-	bool willOverflow = false;
-	if(memAddr > 0x7FFF)
-		i2cAddress |= 1 << 1;	
-	else if(memAddr + length > 0x7FFF)
-		willOverflow = true;
-		
+	uint8_t i2cAddr = I2C_ADDRESS;
+//	bool willOverflow = false;
+// 	if(memAddr > 0x7FFF)
+// 		i2cAddress |= 1 << 1;	
+// 	else if(memAddr + length > 0x7FFF)
+// 		willOverflow = true;
+
+
+	u08 packet[length + 2];
+	// prepare address + data
+	packet[0] = (memAddr>>8);
+	packet[1] = (memAddr&0x00FF);
 	for(int i = 0; i < length; i++)
-	{
-		if(willOverflow && memAddr + i > 0x7FFF)
-			i2cAddress |= 1 << 1;
-		i2ceepromWriteByte(i2cAddress, memAddr,*data++);
-	}
+		packet[2+i] = *(data+i);
+	// send memory address we wish to access to the memory chip
+	// along with the data we wish to write
+	i2cMasterSend(i2cAddr, length + 2, packet);		
 }
 
 void i2ceepromReadBuffer(u32 memAddr, u08* result, u08 length)
 {
-	uint8_t i2cAddress = I2C_ADDRESS;
-	result += length;
-	bool willOverflow = false;
-	if(memAddr - length > 0x7FFF)
-		i2cAddress |= 1 << 1;
-	else if (memAddr > 0x7FFF)
-	{
-		i2cAddress |= 1 << 1;
-		willOverflow = true;	
-	}
-	
-	willOverflow = true;
-	
-	for(int i = 0; i < length; i++)
-	{
-		if(willOverflow && memAddr - i == 0x7FFF)
-			i2cAddress = I2C_ADDRESS;
-		*result-- = i2ceepromReadByte(i2cAddress,memAddr);
-	}
+ 	uint8_t i2cAddr = I2C_ADDRESS;
+// 	bool willOverflow = false;
+// 	if(memAddr - length > 0x7FFF)
+// 		i2cAddress |= 1 << 1;
+// 	else if (memAddr > 0x7FFF)
+// 	{
+// 		i2cAddress |= 1 << 1;
+// 		willOverflow = true;	
+// 	}
+// 	
+	u08 packet[2];
+	// prepare address
+	packet[0] = (memAddr>>8);
+	packet[1] = (memAddr&0x00FF);
+	// send memory address we wish to access to the memory chip
+	i2cMasterSend(i2cAddr, 2, packet);
+	// retrieve the data at this memory address
+	i2cMasterReceive(i2cAddr, length, result);
 }

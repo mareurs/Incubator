@@ -28,7 +28,7 @@
 
 #include "../global.h"
 
-#define I2C_ADDRESS 0x50
+#define I2C_ADDRESS 0xA0
 
 // functions
 

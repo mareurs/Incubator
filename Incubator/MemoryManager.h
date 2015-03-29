@@ -6,15 +6,21 @@
  */ 
 
 #include "DataRow.h"
+#include "avrlibtypes.h"
 
 #ifndef MEMORYMANAGER_H_
 #define MEMORYMANAGER_H_
 
 uint16_t idx;
-uint16_t memoryAddress;
+u32 memoryAddress;
 
 void sendData(DataRow* data);
 DataRow getData();
 void eraseMemory();
-			
+void sendDataToUart();
+void saveBalanceTemp(uint16_t value);
+void saveBalanceHumid(uint8_t value);
+uint16_t getBalanceTemp();
+uint8_t getBalanceHumid();
+
 #endif /* MEMORYMANAGER_H_ */

@@ -54,6 +54,8 @@
 #define FIRST_STAGE_HUMIDITY 55
 #define SECOND_STAGE_HUMIDITY 75
 #define MAX_TEMP_DELTA		0.5
+#define DAY_START_ROLLING	4
+#define DAY_STAGE_2			19
 
 typedef enum
 {
@@ -62,6 +64,8 @@ typedef enum
 
 volatile bool startR1;
 volatile bool startR2;
+volatile bool fiveMinutesPassed;
+bool doRolling;
 bool buzzIsOn;
 double balanceTemperature;
 uint8_t balanceHumidity;
@@ -74,5 +78,6 @@ void toggleR2();
 void startBuzz();
 void stopBuzz();
 void readWaterSensor();
+void sendDataToMemory();
 
 #endif /* MACHINESTATE_H_ */

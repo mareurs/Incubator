@@ -17,10 +17,14 @@
 #include <stdlib.h>
 #include <avr/interrupt.h>
 #include "MenuManager.h"
+#include "DataRow.h"
+#include "MemoryManager.h"
 
 volatile bool startR1 = false;
 volatile bool startR2 = false;
+volatile bool fiveMinutesPassed = false;
 bool buzzIsOn = false;
+bool doRolling = false;
 
 char* LCD_ERROR_MESSAGES[] = {"NIVEL APA SCAZUT","TEMP SUB NIVEL","TEMP PESTE NIVEL","LIPSA SENZOR"};
 
@@ -72,6 +76,14 @@ void MachineInit()
 	SHT21_Init();
 	initDateTime();
 	rprintfInit(lcd_putc);
+	uint16_t bt = getBalanceTemp();
+	double t = bt / 10.0;
+	rprintf("Balance T: %d", bt);
+	uint8_t h = getBalanceHumid();
+	if( t > 0 && t < 80 )
+		balanceTemperature = t;
+	if(h > 0 && h <= 100)
+		balanceHumidity = h;		
 }
 
 
@@ -139,6 +151,19 @@ void readBSSensors()
 	readTempSensor(&T1,&T3);
 }
 
+void checkDayTime()
+{
+	if(dateTime.day > DAY_START_ROLLING && dateTime.day < DAY_STAGE_2)
+		doRolling = true;
+	else
+		doRolling = false;
+	
+	if(dateTime.day == DAY_STAGE_2)
+	{
+		balanceTemperature--;
+		balanceHumidity = balanceHumidity * 1.2;
+	}
+}
 
 void checkMachineStatus()
 {
@@ -147,9 +172,15 @@ void checkMachineStatus()
 	checkHumidity();
 	checkTemperatures();
 	checkWaterSensor();
+	checkDayTime();
 	if(machineError == NONE)
 		buzzIsOn = false;
 	machineError = NONE;
+	if(fiveMinutesPassed)
+	{
+		sendDataToMemory();
+		fiveMinutesPassed = false;
+	}
 }
 
 void checkHumidity()
@@ -294,7 +325,7 @@ void raiseError(MachineErrors error)
 		case NONE:
 			break;		
 	}
-	_delay_ms(2000);
+	_delay_ms(1000);
 }
 
 void printToLCD()
@@ -310,9 +341,9 @@ void printToLCD()
 	rprintfInit(lcd_putc);
 	lcd_gotoXY(1,0);
 	rprintfFloat(3,T1/10.0);
-	lcd_putc('  ');
+	rprintf("  ");
 	rprintfFloat(3,T2/10.0);
-	lcd_putc('  ');
+	rprintf("  ");
 	rprintfFloat(3,T3/10.0);
 	lcd_putc(' ');
 	lcd_gotoXY(2,0);
@@ -357,9 +388,19 @@ void incrementFanSpeed()
 
 void decrementFanSpeed()
 {
-	if( fanValue - 10 >= 0)
+	if( fanValue - 10 >= 10)
 		fanValue-= 10;
 	setFanSpeed(fanValue);
+}
+
+void sendDataToMemory()
+{
+	DataRow data;
+	data.T1 = T1;
+	data.T2 = T2;
+	data.T3 = T3;
+	data.U = U;
+	sendData(&data);
 }
 
 void startHRelay()
@@ -456,50 +497,6 @@ ISR(TIMER0_OVF_vect)
   //Check if need to send data
   char message[20];
 
-  if(Serial.available() > 0){
-	  int i = 0;
-	  while(Serial.available() > 0){
-		  message[i] = Serial.read();
-		  i++;
-	  }
-	  message[i]=0;
-
-	  if(strstr(message,"setT")!=NULL){
-		  balanceTemp = atof(&(message[4]));
-		  Serial.print("The new balanceTemp is ");Serial.println(balanceTemp);
-		  for(int j = 0; j<20;j++)
-		  message[j] = 0;
-	  }
-	  
-	  if(strstr(message,"setU")!=NULL){
-		  balanceHumidity = atof(&(message[4]));
-		  Serial.print("The new balanceHumidity is ");Serial.println(balanceHumidity);
-		  for(int j = 0; j<20;j++)
-		  message[j] = 0;
-	  }
-	  if(strstr(message,"reset")!=NULL){
-		  byte buf[]={0,0};
-		  EEPROM1024.writeBuffer(0,buf,2);
-		  delay(10);
-		  wdt_enable(WDTO_2S);
-		  while(1);
-	  }
-	  if(strstr(message,"setD")!=NULL){
-		  int tmpDay;
-		  tmpDay = atoi(&(message[4]));
-		  Serial.print("The new day is ");Serial.println(tmpDay);
-		  days=tmpDay;
-		  setIDX(days*288);
-		  for(int j = 0; j<20;j++)
-		  message[j] = 0;
-	  }
-	  
-	  if(strstr(message,"down")!=NULL){
-		  for(int j = 0; j<20;j++)
-		  message[j] = 0;
-		  sendData();
-	  }
-  }
 
   lcd.setCursor(4,3);
   lcd_printf("%02d",hours);
