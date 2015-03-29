@@ -153,15 +153,17 @@ void readBSSensors()
 
 void checkDayTime()
 {
+	static bool balanceValSaved = false;
 	if(dateTime.day > DAY_START_ROLLING && dateTime.day < DAY_STAGE_2)
 		doRolling = true;
 	else
 		doRolling = false;
 	
-	if(dateTime.day == DAY_STAGE_2)
+	if(dateTime.day >= DAY_STAGE_2 && !balanceValSaved)
 	{
-		balanceTemperature--;
-		balanceHumidity = balanceHumidity * 1.2;
+		balanceTemperature = balanceTemperature - 1;
+		balanceHumidity = SECOND_STAGE_HUMIDITY;
+		balanceValSaved = true;
 	}
 }
 

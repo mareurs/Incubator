@@ -21,9 +21,6 @@
 
 #include "i2c.h"
 #include "i2ceeprom.h"
-#include "lcd/hd44780.h"
-#include "rprintf.h"
-#include <util/delay.h>
 
 // Standard I2C bit rates are:
 // 100KHz for slow speed

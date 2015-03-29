@@ -28,45 +28,6 @@ int main(void)
 	initMenuManager();
 	i2cInit();
 	sei();
-/*	
-	while(1)
-	{
-		lcd_clrscr();
-		rprintfInit(lcd_putc);
-		rprintf("Writing ...");
-		for( uint16_t i = 256; i < 280; i+= 2 )
-		{
-			lcd_gotoXY(2,0);
-			rprintf("%d",i);
-			i2ceepromWriteBuffer(i, (uint8_t*) &i, 2);
-			lcd_gotoXY(3,0);
-			uint16_t result;
-			_delay_ms(100);
-			i2ceepromReadBuffer(i, (uint8_t*) &result, 2);
-// 			uint16_t tmp;
-// 			i2ceepromReadBuffer(0, (uint8_t*) &tmp, 2);
-			rprintf("%d",result);
-			//_delay_ms(50);
-		}
-		lcd_clrscr();
-// 		rprintf("Reading ...");
-// 		for(uint16_t i = 256; i < 280; i+=2)
-// 		{
-// 			lcd_gotoXY(2,0);
-// 			uint16_t result;
-// 			i2ceepromReadBuffer(i, (uint8_t*) &result, 2);
-// 			lcd_gotoXY(3,0);
-// 			rprintf("%d", result );
-// 			_delay_ms(50);
-// 			if(i != result)
-// 			{
-// 				lcd_gotoXY(4,0);
-// 				rprintf("E %d - %d", i, result);
-// 				_delay_ms(50);
-// 			}
-// 		}
-	}
-	*/
 	while(1)
 	{
 		checkMachineStatus();
