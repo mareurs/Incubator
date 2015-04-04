@@ -84,6 +84,7 @@ void sendDataToUart()
 	uartInit();
 	rprintfInit(uartSendByte);
 	uint16_t currentIdx = getCurrentIndex();
+	idx = 0;
 	memoryAddress = MEMORY_START;
 	
 	rprintf("%d\n",idx);
@@ -98,6 +99,7 @@ void sendDataToUart()
 		rprintfFloat(3, data.T3/10.0);
 		rprintf(";");
 		rprintf("%d\n", data.U);
+		_delay_ms(10);
 	}		
 }
 
