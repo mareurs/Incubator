@@ -86,20 +86,18 @@ void sendDataToUart()
 	uint16_t currentIdx = getCurrentIndex();
 	memoryAddress = MEMORY_START;
 	
-	rprintf("There are %d data points\n\n",idx);
+	rprintf("%d\n",idx);
 	
 	for(int i = 0; i < currentIdx + 1; i++)
 	{
-		rprintf("Data with idx: %d\n",i);
 		DataRow data = getData();
-		rprintf("T1: ");
 		rprintfFloat(3, data.T1/10.0);
-		rprintf(" T2: ");
+		rprintf(";");
 		rprintfFloat(3, data.T2/10.0);
-		rprintf(" T3: ");
+		rprintf(";");
 		rprintfFloat(3, data.T3/10.0);
-		rprintf(" U: %d\n",data.U);
-		_delay_ms(10);
+		rprintf(";");
+		rprintf("%d\n", data.U);
 	}		
 }
 
