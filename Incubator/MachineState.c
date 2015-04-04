@@ -164,6 +164,9 @@ void checkDayTime()
 		balanceTemperature = balanceTemperature - 1;
 		balanceHumidity = SECOND_STAGE_HUMIDITY;
 		balanceValSaved = true;
+		saveBalanceHumid(balanceHumidity);
+		uint16_t t = (uint16_t) (balanceTemperature * 10);
+		saveBalanceTemp(t);
 	}
 }
 
