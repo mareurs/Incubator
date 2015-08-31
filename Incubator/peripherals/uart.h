@@ -39,7 +39,7 @@
 ///	\code
 /// uartInit();					// initialize UART (serial port)
 /// uartSetBaudRate(9600);		// set UART speed to 9600 baud
-/// rprintfInit(uartSendByte);  // configure rprintf to use UART for output
+/// uartSendTxBuffer();  // configure rprintf to use UART for output
 /// rprintf("Hello World\r\n");	// send "hello world" message via serial port
 /// \endcode
 ///

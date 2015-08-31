@@ -20,14 +20,14 @@
 
 #include "i2c.h"
 
-#include "../utils/rprintf.h"	// include printf function library
+#include "rprintf.h"	// include printf function library
 #include "uart.h"
 
 // Standard I2C bit rates are:
 // 100KHz for slow speed
 // 400KHz for high speed
 
-//#define I2C_DEBUG
+#define I2C_DEBUG
 
 // I2C state and address variables
 static volatile eI2cStateType I2cState;
@@ -54,10 +54,10 @@ void i2cInit(void)
 {
 	// set pull-up resistors on I2C bus pins
 	// TODO: should #ifdef these
-// 	sbi(PORTC, 0);	// i2c SCL on ATmega163,323,16,32,etc
-// 	sbi(PORTC, 1);	// i2c SDA on ATmega163,323,16,32,etc
-// 	sbi(PORTD, 0);	// i2c SCL on ATmega128,64
-// 	sbi(PORTD, 1);	// i2c SDA on ATmega128,64
+	sbi(PORTC, 0);	// i2c SCL on ATmega163,323,16,32,etc
+	sbi(PORTC, 1);	// i2c SDA on ATmega163,323,16,32,etc
+	sbi(PORTD, 0);	// i2c SCL on ATmega128,64
+	sbi(PORTD, 1);	// i2c SDA on ATmega128,64
 
 	// clear SlaveReceive and SlaveTransmit handler to null
 	i2cSlaveReceive = 0;
@@ -374,6 +374,7 @@ ISR(TWI_vect)
 		#ifdef I2C_DEBUG
 		rprintfInit(uartAddToTxBuffer);
 		rprintf("I2C: M->START\r\n");
+		uartSendTxBuffer();
 		rprintfInit(uartSendByte);
 		#endif
 		// send device address

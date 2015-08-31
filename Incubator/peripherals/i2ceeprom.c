@@ -18,9 +18,11 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdbool.h>
+#include <util/delay.h>
 
 #include "i2c.h"
 #include "i2ceeprom.h"
+#include "rprintf.h"
 
 // Standard I2C bit rates are:
 // 100KHz for slow speed
@@ -97,7 +99,18 @@ void i2ceepromReadBuffer(u32 memAddr, u08* result, u08 length)
 	packet[0] = (memAddr>>8);
 	packet[1] = (memAddr&0x00FF);
 	// send memory address we wish to access to the memory chip
-	i2cMasterSend(i2cAddr, 2, packet);
+	u08 status;
+	int i = 0;
+	do
+	{
+		i++;
+		lcd_gotoXY(4,0);
+		i2cMasterSend(i2cAddr, 2, packet);
+		status = inb(TWSR) & TWSR_STATUS_MASK;
+		rprintf("%d %x ",i, status);
+		_delay_ms(5);
+	}while(status != TW_MT_DATA_ACK);
+	
 	// retrieve the data at this memory address
 	i2cMasterReceive(i2cAddr, length, result);
 }

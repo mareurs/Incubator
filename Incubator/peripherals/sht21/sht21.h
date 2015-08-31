@@ -48,7 +48,6 @@
 
 //=== Includes =====================================================================================	
 
-#include "avrlibtypes.h"
 #include "i2c_sht.h"
 #include <inttypes.h>
 

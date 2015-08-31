@@ -13,7 +13,7 @@ void init()
 {
 // 	uartInit();
 // 	uartSetBaudRate(9600);
-// 	rprintfInit(uartSendByte);
+// 	uartSendTxBuffer();
 }
 
 void processUSARTLine(char* data)

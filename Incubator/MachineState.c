@@ -365,7 +365,7 @@ void printToLCD()
 
 void printToUart()
 {
-	rprintfInit(uartSendByte);
+	uartSendTxBuffer();
 	rprintfFloat(3,T1/10.0);
 	rprintfStr(" ");
 	rprintfFloat(3,T2/10.0);

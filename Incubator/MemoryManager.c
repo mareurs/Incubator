@@ -70,6 +70,7 @@ DataRow getData()
 	i2ceepromReadBuffer(memoryAddress, buffer, DATAROW_SIZE);
 	incrementAddress();
 	return deserialize(buffer);
+	_delay_ms(50);
 }
 
 uint16_t getCurrentIndex()
@@ -82,12 +83,12 @@ uint16_t getCurrentIndex()
 void sendDataToUart()
 {
 	uartInit();
-	rprintfInit(uartSendByte);
+	uartSendTxBuffer();
 	uint16_t currentIdx = getCurrentIndex();
 	idx = 0;
 	memoryAddress = MEMORY_START;
-	
-	rprintf("%d\n",idx);
+	_delay_ms(50);
+	rprintf("%d\n",currentIdx);
 	
 	for(int i = 0; i < currentIdx + 1; i++)
 	{
@@ -99,7 +100,6 @@ void sendDataToUart()
 		rprintfFloat(3, data.T3/10.0);
 		rprintf(";");
 		rprintf("%d\n", data.U);
-		_delay_ms(10);
 	}		
 }
 

@@ -24,7 +24,7 @@ uint8_t search_sensors(void)
 	uint8_t diff, nSensors;
 
 	#if DS_DEBUG > 0
-		rprintfInit(uartSendByte);	
+		uartSendTxBuffer();	
 		rprintf("Scanning Bus for DS18X20\r\n");
 	#endif
 		
