@@ -1,6 +1,7 @@
 
 #My custom ignores
 Incubator/Debug/*
+Incubator/Release/*
 
 # Windows image file caches
 Thumbs.db
